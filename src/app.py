@@ -4,16 +4,27 @@ import dash_bootstrap_components as dbc
 import base64
 import io
 import pandas as pd
-from .process import process_and_store
+from .process import process_and_store  # Relative import for process.py in the same directory
 from sqlalchemy import create_engine
 import os
+from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 
 # Initialize Dash app with Bootstrap for styling
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server  # Required for Heroku deployment
 
 # Database URL (use environment variable for Heroku)
-db_url = os.getenv("DATABASE_URL", "postgresql://postgres:your_password@localhost:5432/cps_energy")
+db_url = os.getenv("DATABASE_URL", "postgresql://postgres:mynewpassword123@localhost:5432/cps_energy")
+if db_url.startswith("postgres://"):
+    # Replace "postgres://" with "postgresql://" for SQLAlchemy compatibility
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+# Parse the URL and ensure SSL parameters are set
+parsed_url = urlparse(db_url)
+query = parse_qs(parsed_url.query)
+if 'sslmode' not in query:
+    query['sslmode'] = ['require']
+new_query = urlencode(query, doseq=True)
+db_url = urlunparse(parsed_url._replace(query=new_query))
 
 # Define layout with tabs
 app.layout = html.Div([
@@ -79,7 +90,7 @@ def update_output(contents, filename, granularity):
 
 # Callback for downloading data
 @app.callback(
-    Output("download-data", "data"),
+    Output("download-data", 'data'),
     [Input("download-button", "n_clicks")],
     prevent_initial_call=True
 )
