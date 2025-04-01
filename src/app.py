@@ -6,12 +6,14 @@ import io
 import pandas as pd
 from process import process_and_store
 from sqlalchemy import create_engine
+import os
 
 # Initialize Dash app with Bootstrap for styling
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+server = app.server  # Required for Heroku deployment
 
-# Database URL (update with your password)
-db_url = "postgresql://postgres:mynewpassword123@localhost:5432/cps_energy"
+# Database URL (use environment variable for Heroku)
+db_url = os.getenv("DATABASE_URL", "postgresql://postgres:your_password@localhost:5432/cps_energy")
 
 # Define layout with tabs
 app.layout = html.Div([
@@ -96,4 +98,6 @@ def download_data(n_clicks):
     return dict(content=csv_string, filename="meter_readings_data.csv")
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Use the port provided by Heroku, default to 8050 locally
+    port = int(os.getenv("PORT", 8050))
+    app.run(debug=False, host='0.0.0.0', port=port)
