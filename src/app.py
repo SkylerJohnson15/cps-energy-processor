@@ -4,7 +4,7 @@ import dash_bootstrap_components as dbc
 import base64
 import io
 import pandas as pd
-from process import process_and_store
+from .process import process_and_store
 from sqlalchemy import create_engine
 import os
 
